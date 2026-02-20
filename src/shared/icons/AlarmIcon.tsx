@@ -1,0 +1,31 @@
+import type { SVGProps } from "react";
+
+type AlarmIconProps = SVGProps<SVGSVGElement> & {
+  size?: number;
+  color?: string;
+};
+
+export function AlarmIcon({
+  size = 20,
+  color = "#fbff00",
+  ...props
+}: AlarmIconProps) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 48 48"
+      fill={color}
+      stroke={color}
+      {...props}
+    >
+      <g>
+        <path d="M45.7,41,25.7,5a2,2,0,0,0-3.4,0L2.3,41A2,2,0,0,0,4,44H44A2,2,0,0,0,45.7,41ZM24,40H7.5L24,10,40.6,40Z" />
+        <path d="M18,30h4l-2.5,7.4c-.2.4.4.8.8.5l8.5-10.3A1,1,0,0,0,28,26H24l2.5-7.4c.2-.4-.4-.8-.8-.5L17.2,28.4A1,1,0,0,0,18,30Z" />
+      </g>
+    </svg>
+  );
+}
+
+export default AlarmIcon;

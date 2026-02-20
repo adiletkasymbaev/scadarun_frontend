@@ -1,0 +1,28 @@
+@import "tailwindcss";
+@plugin './hero.ts';
+@source '../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
+@custom-variant dark (&:is(.dark *));
+
+body {
+    font-family: "Noto Sans", sans-serif;
+}
+
+.sidebar {
+    @apply bg-gray-900 w-80 h-screen flex flex-col gap-3 p-2
+}
+
+.sidebar-card-bordered {
+    @apply border border-gray-200 rounded-md
+}
+
+.sidebar-card-filled {
+    @apply bg-gray-200 rounded-md flex items-center select-none transition-all hover:bg-gray-300
+}
+
+.divider {
+    @apply w-full h-[1px] bg-gray-200 opacity-30 my-1
+}
+
+.custom-node-handle {
+    @apply !h-2.5 !w-2.5 !border-2 !border-white !bg-blue-500
+}
