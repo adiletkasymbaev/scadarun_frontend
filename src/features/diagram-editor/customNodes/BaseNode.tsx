@@ -63,7 +63,7 @@ function BaseNode({
         </div>
       )}
 
-      {!disableOverlay && status === "alarm" && (
+      {status === "alarm" && (
         <div
           className="absolute inset-0 rounded-md pointer-events-none"
           style={{

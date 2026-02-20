@@ -6,46 +6,44 @@ import type { HandleType } from "../../types/handle";
 function ThreePositionLoadBreakSwitchNode({ selected, data, id }: NodeProps) {
   const applied = (data as any)?.color as string | null | undefined;
   const status = (data as any)?.status ?? "on";
-const rotation = ((data as any)?.rotation ?? 0) as 0 | 90 | 180 | 270;
 
   const handlers: HandleType[] = [
-    // TOP — верхняя вершина ромба
     {
       id: "t-top",
       type: "target",
       direction: Position.Top,
-      className:
-        "custom-node-handle !top-[10px] !left-1/2 ",
+      className: "custom-node-handle !top-[5px] !left-[25%]",
     },
     {
       id: "s-top",
       type: "source",
       direction: Position.Top,
-      className:
-        "custom-node-handle !top-[10px] !left-1/2 ",
+      className: "custom-node-handle !top-[5px] !left-[25%]",
     },
-
-    // BOTTOM — нижняя вершина ромба
     {
       id: "t-bottom",
       type: "target",
       direction: Position.Bottom,
-      className:
-        "custom-node-handle !bottom-[10px] !left-1/2 ",
+      className: "custom-node-handle !bottom-[10px] !left-[25%]",
     },
     {
       id: "s-bottom",
       type: "source",
       direction: Position.Bottom,
-      className:
-        "custom-node-handle !bottom-[10px] !left-1/2 ",
+      className: "custom-node-handle !bottom-[10px] !left-[25%]",
     },
   ];
 
-  const icon = applied ? (
-    <ThreePositionLoadBreakSwitchIcon stroke={applied} fill={applied} />
-  ) : (
-    <ThreePositionLoadBreakSwitchIcon />
+  const fillColor =
+    status === "off"
+      ? "#FF0000"
+      : applied ?? "#00FF3C";
+
+  const icon = (
+    <ThreePositionLoadBreakSwitchIcon
+      stroke={applied ?? undefined}
+      fill={fillColor}
+    />
   );
 
   return (
@@ -54,7 +52,8 @@ const rotation = ((data as any)?.rotation ?? 0) as 0 | 90 | 180 | 270;
       handlers={handlers}
       selected={selected}
       status={status}
-      rotation={rotation}
+      rotation={0}
+      disableOverlay={true}
       id={id}
     />
   );

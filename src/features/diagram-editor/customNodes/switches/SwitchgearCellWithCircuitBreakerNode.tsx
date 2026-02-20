@@ -6,10 +6,9 @@ import type { HandleType } from "../../types/handle";
 function SwitchgearCellWithCircuitBreakerNode({ selected, data, id }: NodeProps) {
   const applied = (data as any)?.color as string | null | undefined;
   const status = (data as any)?.status ?? "on";
-const rotation = ((data as any)?.rotation ?? 0) as 0 | 90 | 180 | 270;
+  const rotation = ((data as any)?.rotation ?? 0) as 0 | 90 | 180 | 270;
 
   const handlers: HandleType[] = [
-    // TOP
     {
       id: "t-top",
       type: "target",
@@ -22,8 +21,6 @@ const rotation = ((data as any)?.rotation ?? 0) as 0 | 90 | 180 | 270;
       direction: Position.Top,
       className: "custom-node-handle !top-[10px] !left-1/2 ",
     },
-
-    // BOTTOM
     {
       id: "t-bottom",
       type: "target",
@@ -38,10 +35,16 @@ const rotation = ((data as any)?.rotation ?? 0) as 0 | 90 | 180 | 270;
     },
   ];
 
+  const fillColor =
+    status === "off"
+      ? "#FF0000"
+      : "#00FF3C";
+
   const icon = (
     <SwitchgearCellWithCircuitBreakerIcon
       stroke={applied ?? undefined}
-      fill={applied ?? undefined}
+      fill={applied ?? undefined}             
+      breakerFill={fillColor}      
     />
   );
 
@@ -52,6 +55,8 @@ const rotation = ((data as any)?.rotation ?? 0) as 0 | 90 | 180 | 270;
       selected={selected}
       status={status}
       disableOverlay={true}
+      rotation={rotation}
+      id={id}
     />
   );
 }
