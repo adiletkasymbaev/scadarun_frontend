@@ -36,7 +36,8 @@ function SideBar() {
   const setEditing = useEditorStore((s) => s.setEditing);
   const setRevision = useEditorStore((s) => s.setRevision);
 
-  const saveMutation = useSaveSchemaVersionMutation(schemaMeta.id);
+  const schemaMetaId = schemaMeta?.id ?? "";
+  const saveMutation = useSaveSchemaVersionMutation(schemaMetaId);
   const isEditing = useEditorStore((s) => s.isEditing);
 
   const edgeColor = useEditorStore((s) => s.edgeColor);
@@ -86,7 +87,10 @@ function SideBar() {
   }
 
   function onSave() {
-    if (!schemaMeta) return;
+    if (!schemaMeta) {
+      toast.error("Схема ещё загружается. Подожди секунду и попробуй снова.");
+      return;
+    }
 
     saveMutation.mutate(
       {
