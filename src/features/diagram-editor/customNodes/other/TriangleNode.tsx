@@ -2,6 +2,7 @@ import { Position, type NodeProps } from "@xyflow/react";
 import BaseNode from "../BaseNode";
 import type { HandleType } from "../../types/handle";
 import TriangleAlarmIcon from "../../icons/TriangleAlarmIcon";
+import { Link } from "react-router-dom";
 
 type Rot = 0 | 90 | 180 | 270;
 
@@ -67,6 +68,12 @@ const HANDLERS_BY_ROTATION: Record<Rot, HandleType[]> = {
   ],
 };
 
+function buildSchemaHref(data: any) {
+  const id = String(data?.linkedSchemaId ?? "");
+  if (!id) return "";
+  return `/schemas/${id}`;
+}
+
 function TriangleNode({ selected, data, id }: NodeProps) {
   const applied = (data as any)?.color as string | null | undefined;
   const status = (data as any)?.status ?? "on";
@@ -75,22 +82,49 @@ function TriangleNode({ selected, data, id }: NodeProps) {
   const handlers = HANDLERS_BY_ROTATION[rotation] ?? HANDLERS_BY_ROTATION[0];
 
   const icon = (
-      <TriangleAlarmIcon
-          size={42}
-          color={applied ?? "#EA7474"}
-          style={{ display: "block" }}
-      />
+    <TriangleAlarmIcon
+      size={42}
+      color={applied ?? "#EA7474"}
+      style={{ display: "block" }}
+    />
   );
 
+  const href = buildSchemaHref(data);
+  const hasLink = Boolean(href);
+
   return (
+    <div className="relative inline-block group">
       <BaseNode
-          icon={icon}
-          handlers={handlers}
-          selected={selected}
-          status={status}
-          rotation={rotation}
-          id={id}
+        icon={icon}
+        handlers={handlers}
+        selected={selected}
+        status={status}
+        rotation={rotation}
+        id={id}
       />
+
+      {hasLink && (
+        <Link
+          to={href}
+          title={String((data as any)?.linkedSchemaName ?? "Открыть схему")}
+          className="
+            absolute bottom-0
+            rounded-full px-2 py-0.5
+            bg-white/90 border border-black/10 shadow
+            opacity-0 scale-90
+            group-hover:opacity-100 group-hover:scale-100
+            transition
+            cursor-pointer
+          "
+          onMouseDown={(e) => {
+            e.stopPropagation();
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >Перейти</Link>
+      )}
+    </div>
   );
 }
 

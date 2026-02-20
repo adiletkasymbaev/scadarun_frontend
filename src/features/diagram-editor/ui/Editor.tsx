@@ -36,6 +36,9 @@ import { Toaster } from "sonner";
 import Spinner from "../../shared/ui/Spinner";
 import { RING_META_BY_NODETYPE } from "../lib/ringMeta";
 
+// ✅ добавили
+import { useSchemasQuery } from "../../../api/tanstack/schemas";
+
 const MIN_DISTANCE = 150;
 const TEMP_CLASS = "temp-proximity";
 
@@ -43,6 +46,25 @@ function dist(a: { x: number; y: number }, b: { x: number; y: number }) {
   const dx = a.x - b.x;
   const dy = a.y - b.y;
   return Math.sqrt(dx * dx + dy * dy);
+}
+
+// ✅ маленький нормализатор: поддерживаем разные форматы ответа
+type AnySchema = {
+  id: string;
+  name?: string;
+  title?: string;
+  slug?: string;
+  archived?: boolean;
+  isArchived?: boolean;
+};
+
+function normalizeSchemas(input: any): AnySchema[] {
+  if (!input) return [];
+  if (Array.isArray(input)) return input as AnySchema[];
+  if (Array.isArray(input.items)) return input.items as AnySchema[];
+  if (Array.isArray(input.schemas)) return input.schemas as AnySchema[];
+  if (Array.isArray(input.data)) return input.data as AnySchema[];
+  return [];
 }
 
 export default function Editor({ isFetchingSchema = false }: { isFetchingSchema?: boolean }) {
@@ -144,6 +166,18 @@ export default function Editor({ isFetchingSchema = false }: { isFetchingSchema?
     applyPowerPropagation,
   });
 
+  const { data: schemas } = useSchemasQuery(); 
+
+  const availableSchemas = useMemo(() => {
+    return (schemas ?? [])
+      .filter((s) => !(s.is_archived ?? false) && !s.archived_at)
+      .map((s) => ({
+        id: s.id,
+        name: s.name,
+        slug: s.slug,
+      }));
+  }, [schemas]);
+
   // derived props для меню
   const appliedColor = ((ctxNode?.data as any)?.color ??
     undefined) as EditorColor | undefined;
@@ -206,76 +240,6 @@ export default function Editor({ isFetchingSchema = false }: { isFetchingSchema?
     [store, getInternalNode]
   );
 
-  /**
-   * ✅ ВНИМАНИЕ:
-   * setEdges у тебя НЕ поддерживает функциональный апдейтер.
-   * Поэтому мы вычисляем next от текущего edges (из стора/props) и вызываем setEdges(next).
-   */
-
-  const onNodeDrag = useCallback(
-    (_: any, node: Node) => {
-      const close = getClosestProximityEdge(node);
-
-      // удаляем прошлые temp
-      const next = edges.filter((e) => e.className !== TEMP_CLASS);
-
-      if (!close) {
-        setEdges(next);
-        return;
-      }
-
-      const alreadyExists = next.some(
-        (e) => e.source === close.source && e.target === close.target
-      );
-
-      if (!alreadyExists) {
-        next.push({
-          id: close.id,
-          source: close.source,
-          target: close.target,
-          type: "coloredStep",
-          data: { width: 4, color: edgeColor },
-          className: TEMP_CLASS,
-        } as Edge);
-      }
-
-      setEdges(next);
-    },
-    [edges, setEdges, edgeColor, getClosestProximityEdge]
-  );
-
-  const onNodeDragStop = useCallback(
-    (_: any, node: Node) => {
-      const close = getClosestProximityEdge(node);
-
-      // убираем temp-ребра
-      const next = edges.filter((e) => e.className !== TEMP_CLASS);
-
-      if (!close) {
-        setEdges(next);
-        return;
-      }
-
-      const alreadyExists = next.some(
-        (e) => e.source === close.source && e.target === close.target
-      );
-
-      if (!alreadyExists) {
-        next.push({
-          id: close.id,
-          source: close.source,
-          target: close.target,
-          type: "coloredStep",
-          data: { width: 4, color: edgeColor },
-        } as Edge);
-      }
-
-      setEdges(next);
-      queueMicrotask(applyPowerPropagation);
-    },
-    [edges, setEdges, edgeColor, getClosestProximityEdge, applyPowerPropagation]
-  );
-
   const onConnectWrapped = useCallback(
     (params: Connection) => onConnect(params),
     [onConnect]
@@ -293,6 +257,9 @@ export default function Editor({ isFetchingSchema = false }: { isFetchingSchema?
     applied: ringColors[m.key] ?? null,
     draft: (ringDrafts[m.key] ?? ringColors[m.key] ?? (m.defaultColor as EditorColor)) as EditorColor,
   }));
+
+  const linkedSchemaId = String(((ctxNode?.data as any)?.linkedSchemaId ?? ""));
+  const isTriangle = nodeType === "TriangleNode";
 
   return (
     <div className="w-full h-screen flex">
@@ -317,8 +284,6 @@ export default function Editor({ isFetchingSchema = false }: { isFetchingSchema?
           onSelectionChange={onSelectionChange}
           onNodeContextMenu={onNodeContextMenu}
           onPaneContextMenu={onPaneContextMenu}
-          // onNodeDrag={onNodeDrag}
-          // onNodeDragStop={onNodeDragStop}
           defaultEdgeOptions={{
             type: edgeDrawType === "step" ? "coloredStep" : "coloredStraight",
             data: { width: 4, color: edgeColor },
@@ -431,6 +396,29 @@ export default function Editor({ isFetchingSchema = false }: { isFetchingSchema?
             onRotate90={() => {
               const next = (((normalized + 90) % 360) as 0 | 90 | 180 | 270);
               updateNodeData(ctx.nodeId, { rotation: next });
+            }}
+
+            // ✅ НОВОЕ: только для TriangleNode
+            isTriangle={isTriangle}
+            schemaOptions={availableSchemas}
+            linkedSchemaId={linkedSchemaId}
+            onChangeLinkedSchema={(schemaId) => {
+              if (!schemaId) {
+                updateNodeData(ctx.nodeId, {
+                  linkedSchemaId: null,
+                  linkedSchemaSlug: null,
+                  linkedSchemaName: null,
+                });
+                return;
+              }
+
+              const found = availableSchemas.find((s) => s.id === schemaId);
+
+              updateNodeData(ctx.nodeId, {
+                linkedSchemaId: schemaId,                 // ✅ ID
+                linkedSchemaSlug: found?.slug ?? null,    // опционально
+                linkedSchemaName: found?.name ?? null,    // опционально
+              });
             }}
           />
         )}

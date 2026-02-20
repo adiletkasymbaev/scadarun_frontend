@@ -26,6 +26,8 @@ type RingEditorItem = {
   draft: EditorColor;
 };
 
+type SchemaOption = { id: string; name: string; slug?: string };
+
 type Props = {
   x: number;
   y: number;
@@ -61,6 +63,11 @@ type Props = {
 
   onDelete: () => void;
   onClose: () => void;
+
+  isTriangle?: boolean;
+  schemaOptions?: SchemaOption[];
+  linkedSchemaId?: string;
+  onChangeLinkedSchema?: (schemaId: string) => void;
 };
 
 export default function NodeContextMenu({
@@ -89,6 +96,11 @@ export default function NodeContextMenu({
   onClearColor,
   canClearColor,
   onClose,
+
+  isTriangle,
+  schemaOptions,
+  linkedSchemaId,
+  onChangeLinkedSchema,
 }: Props) {
   const isSame = (color ?? "") === colorDraft;
 
@@ -142,6 +154,30 @@ export default function NodeContextMenu({
           ))}
         </CMSelect>
       </Field>
+
+      {/* ✅ НОВОЕ: только для TriangleNode */}
+      {isTriangle ? (
+        <Field label="Ссылка на схему">
+          <CMSelect
+            value={linkedSchemaId ?? ""}
+            onChange={(e) => onChangeLinkedSchema?.(e.target.value)}
+          >
+            <option value="" className="text-black">
+              — не выбрано —
+            </option>
+
+            {(schemaOptions ?? []).map((s) => (
+              <option key={s.id} value={s.id} className="text-black">
+                {s.name}
+              </option>
+            ))}
+          </CMSelect>
+
+          <div className="mt-1 text-[10px] text-white/50">
+            При наведении на треугольник появится кружок-ссылка.
+          </div>
+        </Field>
+      ) : null}
 
       <Field label="Цвет (черновик)">
         <>
